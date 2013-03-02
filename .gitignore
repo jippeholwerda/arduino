@@ -16,5 +16,5 @@
 *.out
 *.app
 
-/**/.dep
+**/.dep
 *.lst
