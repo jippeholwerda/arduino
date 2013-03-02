@@ -1,7 +1,6 @@
 TARGET = acceler
 
 CC = avr-g++
-# CPP = avr-g++
 OBJCOPY = avr-objcopy
 NM = avr-nm
 AVR_ARCH = atmega2560
@@ -10,9 +9,6 @@ AVRDUDE_PROGRAMMER = avrispmkII
 F_CPU = 16000000
 PORT = /dev/tty.usbmodem*
 FORMAT = ihex
-# CSTANDARD = -std=c89
-# CSTANDARD = -std=gnu99
-
 
 # AVRDUDE_VERBOSE = -v -v
 AVRDUDE_FLAGS = -D -F -p $(AVRDUDE_ARCH) -P $(PORT) -c $(AVRDUDE_PROGRAMMER)
@@ -26,33 +22,19 @@ AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 CURDIR := $(dir $(lastword $(MAKEFILE_LIST)))
 AVR_BASE_DIR  ?= $(abspath $(CURDIR)..)
 
-# SRC = $(TARGET).c
-ARDUINO_CORE = .
-SRC = \
-	$(ARDUINO_CORE)/$(TARGET).c \
-	$(ARDUINO_CORE)/hooks.c \
-	$(ARDUINO_CORE)/wiring.c \
-	$(ARDUINO_CORE)/wiring_analog.c \
-	$(ARDUINO_CORE)/wiring_digital.c \
-	$(ARDUINO_CORE)/wiring_pulse.c \
-	$(ARDUINO_CORE)/wiring_shift.c \
-	$(ARDUINO_CORE)/WInterrupts.c \
+SRC = $(TARGET).c
 
-CPPSRC = $(ARDUINO_CORE)/HardwareSerial.cpp
-
-INC_DIR = $(AVR_BASE_DIR)/include
+INC = $(AVR_BASE_DIR)/include
+LIB = $(AVR_BASE_DIR)/lib
 OBJ = $(SRC:.c=.o)
- # $(CPPSRC:.cpp=.o)
-# CPPOBJ = $(SRC:.cpp=.o)
 LST = $(SRC:.c=.lst)
 
 CFLAGS = -DF_CPU=$(F_CPU)UL -D_MEGA_BOARD_ -DUSBCON
 CFLAGS += -Os
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
-CFLAGS += -Wall
+CFLAGS += -Wall -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:.c=.lst)
-CFLAGS += $(patsubst %,-I%,$(INC_DIR))
-# CFLAGS +=  -Wstrict-prototypes $(CSTANDARD)
+CFLAGS += $(patsubst %,-I%,$(INC))
 
 LDFLAGS = -lm -mmcu=$(AVR_ARCH) -Wl,--gc-sections
 
@@ -87,17 +69,11 @@ sym: $(TARGET).sym
 %.o : %.c
 	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
-# %.o : %.cpp
-# 	$(CPP) -c $(ALL_CFLAGS) $< -o $@
-
 $(TARGET).elf: $(OBJ) $(TARGET).o
-	$(CC) $(ALL_CFLAGS) $^ new.o WString.o Print.o Stream.o HardwareSerial.o --output $@ $(LDFLAGS)
-
-test:
-	echo $(OBJ)
+	$(CC) $(ALL_CFLAGS) $^ $(LIB)/libarduino-mega2560.a --output $@ $(LDFLAGS)
 
 clean:
-	rm -f $(TARGET).hex $(TARGET).eep $(TARGET).elf $(TARGET).map $(TARGET).lst $(TARGET).sym $(LST) $(OBJ) $(TARGET).o
+	rm -f $(TARGET).hex $(TARGET).eep $(TARGET).elf $(TARGET).map $(TARGET).lst $(TARGET).sym $(LST) $(OBJ)
 
 upload: $(TARGET).hex $(TARGET).eep
 	avrdude $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
