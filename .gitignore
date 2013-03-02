@@ -16,5 +16,8 @@
 *.out
 *.app
 
-**/.dep
+*.o.d
 *.lst
+*.elf
+*.hex
+*.map

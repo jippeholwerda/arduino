@@ -1,7 +1,7 @@
 TARGET = acceler
 
-CC = avr-gcc
-CPP = avr-g++
+CC = avr-g++
+# CPP = avr-g++
 OBJCOPY = avr-objcopy
 NM = avr-nm
 AVR_ARCH = atmega2560
@@ -28,8 +28,9 @@ AVR_BASE_DIR  ?= $(abspath $(CURDIR)..)
 
 # SRC = $(TARGET).c
 ARDUINO_CORE = .
-CSRC = \
+SRC = \
 	$(ARDUINO_CORE)/$(TARGET).c \
+	$(ARDUINO_CORE)/hooks.c \
 	$(ARDUINO_CORE)/wiring.c \
 	$(ARDUINO_CORE)/wiring_analog.c \
 	$(ARDUINO_CORE)/wiring_digital.c \
@@ -40,9 +41,10 @@ CSRC = \
 CPPSRC = $(ARDUINO_CORE)/HardwareSerial.cpp
 
 INC_DIR = $(AVR_BASE_DIR)/include
-OBJ = $(CSRC:.c=.o) $(CPPSRC:.cpp=.o)
+OBJ = $(SRC:.c=.o)
+ # $(CPPSRC:.cpp=.o)
 # CPPOBJ = $(SRC:.cpp=.o)
-LST = $(CSRC:.c=.lst)
+LST = $(SRC:.c=.lst)
 
 CFLAGS = -DF_CPU=$(F_CPU)UL -D_MEGA_BOARD_ -DUSBCON
 CFLAGS += -Os
@@ -85,11 +87,11 @@ sym: $(TARGET).sym
 %.o : %.c
 	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
-%.o : %.cpp
-	$(CPP) -c $(ALL_CFLAGS) $< -o $@
+# %.o : %.cpp
+# 	$(CPP) -c $(ALL_CFLAGS) $< -o $@
 
 $(TARGET).elf: $(OBJ) $(TARGET).o
-	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
+	$(CC) $(ALL_CFLAGS) $^ new.o WString.o Print.o Stream.o HardwareSerial.o --output $@ $(LDFLAGS)
 
 test:
 	echo $(OBJ)
